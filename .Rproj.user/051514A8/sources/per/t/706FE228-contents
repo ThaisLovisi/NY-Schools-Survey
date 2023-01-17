@@ -1,0 +1,156 @@
+---
+title: "NYC Schools Perceptions"
+author: "Thais Lovisi"
+date: "08/12/2022"
+output: html_notebook
+---
+
+## Introduction 
+
+With demographic and test score data from the New York City Department of Education, this project aims to explore the data using visualization techniques and calculated correlations to understand how schools' demographics affect SAT scores, an indicator of schools' academic performance are related.
+
+This dataset also has some data about: Responses to surveys designed to gauge parent, student, and teacher perceptions of the quality of New York City schools. 
+
+In this project, we are targeting to answer the following questions:
+
+  Do student, teacher, and parent perceptions of NYC school quality appear to be related to demographic and academic success metrics?
+
+  Do students, teachers, and parents have similar perceptions of NYC school quality?
+
+## Step 0 - Setup  
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library ("tidyverse")
+library(dplyr)
+library("readxl")
+library(plyr)
+
+```
+###Loading files:
+    Files information:
+      **Survey Data Dictionary.xls**: contains metadata useful for decision making about how to clean and prepare the survey data for analysis.
+      **masterfile11_gened_final.xlsx**: contain survey data for "general education" schools — those that do not specifically serve populations with special needs.
+      **masterfile11_d75_final.xlsx**: contain survey data for District 75 schools, which provide special education support for children with special needs such as                learning or physical disabilities.
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+survey_special_school <- read_excel("masterfile11_d75_final.xlsx")
+general_education <- read_excel ("masterfile11_gened_final.xlsx")
+survey <- read_excel ("Survey Data Dictionary.xls")
+```
+### Dataset Familiarisation
+
+#### For **survey** file
+
+      Identifying data type
+      
+```{r}
+for (c in colnames(survey)){
+  print(typeof(survey[[c]]))
+}
+
+```
+        Column's Names
+        
+```{r}
+colnames(survey)
+```
+        Identifying unique values for each column
+        
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+head(survey)
+tail(survey)
+```       
+       Renaming columns
+    
+```{r}
+colnames(survey) <- c("Survey_Field", "Description")
+```
+
+#### For **general_education** file
+       Initial dimensions
+    
+```{r echo=TRUE}
+dim(general_education)
+ncol(general_education)
+nrow(general_education)
+```     
+      Column's Names
+        
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+colnames(general_education)
+```
+The colnames displayed not the variable names hence the survey variables are displayed at row 2 not at the first row. Thus is needed to remove row 1 and the header.
+
+```{r}
+general_education <- general_education[-1,]
+```
+
+  There is some column code identified on Survey Data Dictionary?
+```{r}
+S_Fields <- t(general_education[1,]) # Gets the first row and transform it on column
+Vlook_up <-  as.data.frame(vec1,2)
+colnames(Vlook_up) <- c("Survey_Field")
+Look_up_step1 <- join(Vlook_up, survey, by = "Survey_Field")
+Look_up_step2 = Look_up_step1%>% #just checking how many aren't NA in its description
+  filter(!is.na(Description)) #here the parameter is the col name
+dim(Look_up_step1)
+```
+
+Note that only 16 columns from dataset general_education were identified on the dictionary. 
+
+
+Other way to do the vlook_up would be by using merge:
+        **E.g.:** base1 <- (merge(survey, Vlook_up, by = 'Survey_Field'))
+        
+#### Cleaning Unessecery Columns 
+
+Taking in to account that our vlook up has the transposed value in correct order we can identify the variables labled and clean the ones that we cannot identify.
+```{r}
+C_Kept <- for (c in 2){
+                for (i in 1:nrow(Look_up_step1)){
+                    if (is.na(Look_up_step1[i,c])) {
+                      next #if doesnt work with other coders go change break by next
+                    }else{
+                      print (c(i))
+                      next
+                    }
+                }       
+}
+
+
+new_general_education <- general_education[,c (1:11,63,330,602,661,1418,1679)]
+```
+    
+   
+#### For **survey_special_school** file
+
+        Identifying unique values for each column
+Initial dimensions
+    
+```{r echo=TRUE}
+dim(survey_special_school)
+ncol(survey_special_school)
+nrow(survey_special_school)
+```     
+      Column's Names
+        
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+colnames(survey_special_school)
+```
+
+The colnames displayed not the variable names hence the survey variables are displayed at row 2 not at the first row. Thus is needed to remove row 1 and the header.
+
+```{r}
+survey_special_school1 <- survey_special_school[-1,]
+```
+There is some column code identified on Survey Data Dictionary?
+```{r}
+
+```
+
+```{r}
+
+```
+
+## Step 1 - 
+
+

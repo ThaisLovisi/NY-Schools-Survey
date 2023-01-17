@@ -1,0 +1,4 @@
+"0","plyr1 <- join(Vlook_up, survey, by = ""Survey_Field"")
+"
+"2","Error in `[.data.frame`(x, by) : undefined columns selected
+"

@@ -1,0 +1,28 @@
+{
+    "id": "706FE228",
+    "path": "~/MBA/New folder/Data Cleaning/NYC Schools Perceptions.Rmd",
+    "project_path": "NYC Schools Perceptions.Rmd",
+    "type": "r_markdown",
+    "hash": "114260442",
+    "contents": "",
+    "dirty": false,
+    "created": 1673173133661.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "chunk_output_type": "inline",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "146,0",
+        "scrollLine": "123"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1673217562,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1673352005610,
+    "read_only": false,
+    "read_only_alternatives": []
+}
