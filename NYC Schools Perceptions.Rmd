@@ -19,10 +19,11 @@ In this project, we are targeting to answer the following questions:
 
 ## Step 0 - Setup  
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-library ("tidyverse")
+library (tidyverse)
 library(dplyr)
 library("readxl")
 library(plyr)
+library(kableExtra)
 
 ```
 ###Loading files:
@@ -52,6 +53,7 @@ for (c in colnames(survey)){
         
 ```{r}
 colnames(survey)
+survey <- survey[c(-1,-2,-3),]
 ```
         Identifying unique values for each column
         
@@ -75,36 +77,24 @@ nrow(general_education)
 ```     
       Column's Names
         
-```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-colnames(general_education)
-```
-The colnames displayed not the variable names hence the survey variables are displayed at row 2 not at the first row. Thus is needed to remove row 1 and the header.
+For general_education colnames displayed not the variable names hence the survey variables are displayed at row 2 not at the first row. Thus is needed to remove row 1 and the header.
 
 ```{r}
 general_education <- general_education[-1,]
+colnames(general_education) <- general_education[2,]
 ```
 
-  There is some column code identified on Survey Data Dictionary?
-```{r}
-S_Fields <- t(general_education[1,]) # Gets the first row and transform it on column
-Vlook_up <-  as.data.frame(vec1,2)
-colnames(Vlook_up) <- c("Survey_Field")
-Look_up_step1 <- join(Vlook_up, survey, by = "Survey_Field")
-Look_up_step2 = Look_up_step1%>% #just checking how many aren't NA in its description
-  filter(!is.na(Description)) #here the parameter is the col name
-dim(Look_up_step1)
-```
-
-Note that only 16 columns from dataset general_education were identified on the dictionary. 
-
-
-Other way to do the vlook_up would be by using merge:
-        **E.g.:** base1 <- (merge(survey, Vlook_up, by = 'Survey_Field'))
+ 
         
 #### Cleaning Unessecery Columns 
 
 Taking in to account that our vlook up has the transposed value in correct order we can identify the variables labled and clean the ones that we cannot identify.
+
+Taking a look at the Data Dctionary , in survey we see that have some variables of interest not listed by the year 2011(_11) but detailed to 2010(_10), in this way
+the vlookup didn`t added their names. 
+
 ```{r}
+#if I wanted the list of columns too keep at the dataset I would do:
 C_Kept <- for (c in 2){
                 for (i in 1:nrow(Look_up_step1)){
                     if (is.na(Look_up_step1[i,c])) {
@@ -116,11 +106,65 @@ C_Kept <- for (c in 2){
                 }       
 }
 
-colnames(general_education) <- t(Look_up_step1[,2])
-new_general_education <- general_education[,c (1:11,63,330,602,661,1418,1679)]
+
 ```
-    
+So lets again take a look on our variables of interest :
+
+      dbn 
+      schoolname 
+      schooltype 	
+      Safety and Respect score based on parent responses (saf_p_10)
+      Communication score based on parent responses (com_p_10)
+      Engagement score based on parent responses (eng_p_10)
+      Academic expectations score based on parent responses(aca_p_10)
+      Safety and Respect score based on teacher responses (saf_t_10) 
+      Communication score based on teacher responses (com_t_10)
+      Engagement score based on teacher responses (eng_t_10)
+      Academic expectations score based on teacher responses (aca_t_10)
+      Safety and Respect score based on student responses (saf_s_10)
+      Communication score based on student responses (com_s_10)
+      Engagement score based on student responses (eng_s_10)
+      Academic expectations score based on student responses(aca_s_10)
+      Safety and Respect total score (saf_tot_10)
+      Communication total score (com_tot_10)
+      Engagement total score (eng_tot_10)
+      Academic Expectations total score (aca_tot_10)
+
+so lets select those variables filtered by high school`s to create a new_general_education data set
+
+```{r}
+new_general_education <- general_education %>% select(dbn,schoolname, saf_p_11,com_p_11,eng_p_11,aca_p_11,saf_t_11,com_t_11,eng_t_11,aca_t_11,saf_s_11,com_s_11,	
+eng_s_11,aca_s_11,saf_tot_11,com_tot_11,eng_tot_11,aca_tot_11)
+```
    
+   We need filter as well by schooltype, how can we identify the school type on this data set?
+          Lets create a new column where if the school name contains "High" or "High School", the column will have the input H, otherwise NA.
+
+```{r}
+High_School <- function(schoolname){
+  hschool_positive = case_when(
+    str_detect(schoolname, "High") ~ TRUE,
+    str_detect(schoolname, "High School") ~ TRUE,
+  TRUE ~ FALSE
+    )
+}
+
+new_general_education <- new_general_education[-1,]
+
+new_general_education <- new_general_education %>% #Rewriting it in a new colunm called positive_Review
+  mutate(
+   stype = unlist(map(schoolname, High_School))
+  )
+
+new_general_education <- new_general_education %>%
+        filter(stype == TRUE)
+new_general_education <- new_general_education[,-19]
+
+```
+
+After the initial data cleaning we have 255 observations for 19 variables at the data set that refers to the General Education High Schools (new_general_education).
+
+
 #### For **survey_special_school** file
 
         Identifying unique values for each column
@@ -137,54 +181,34 @@ nrow(survey_special_school)
 colnames(survey_special_school)
 ```
 
-The colnames displayed not the variable names hence the survey variables are displayed at row 2 not at the first row. Thus is needed to remove row 1 and the header.
-
+There is some column code identified on Survey Data Dictionary? 
+      Yes, and are the same as before.
+      
 ```{r}
-survey_special_school1 <- survey_special_school[-1,]
-```
-There is some column code identified on Survey Data Dictionary?
-```{r}
-S_Fields <- t(survey_special_school[1,]) # Gets the first row and transform it on column
-Vlook_up1 <-  as.data.frame(S_Fields,2)
-dim(Vlook_up1)
-colnames(Vlook_up1) <- c("Survey_Field")
-Look_up_step3 <- join(Vlook_up1, survey, by = "Survey_Field")
-Look_up_step4 = Look_up_step1%>% #just checking how many aren't NA in its description
-  filter(!is.na(Description)) #here the parameter is the col name
-dim(Look_up_step3)
-```
-Note that only 16 columns from dataset survey_special_education were identified on the dictionary. 
+new_special_education <- survey_special_school[-1,]
 
 
-#### Cleaning Unessecery Columns 
+colnames(new_special_education) <- new_special_education[1,]
 
-Taking in to account that our vlook up has the transposed value in correct order we can identify the variables labled and clean the ones that we cannot identify.
-```{r}
-C_Kept <- for (c in 2){
-                for (i in 1:nrow(Look_up_step3)){
-                    if (is.na(Look_up_step3[i,c])) {
-                      next #if doesnt work with other codes go change break by next
-                    }else{
-                      print (c(i))
-                      next
-                    }
-                }       
-}
-colnames(survey_special_school) <- t(Look_up_step3[,2])
+new_special_education <- new_special_education %>% 
+  select(dbn,schoolname,saf_p_11,com_p_11,eng_p_11,aca_p_11,saf_t_11,com_t_11,eng_t_11,aca_t_11,saf_s_11,com_s_11,	
+  eng_s_11,aca_s_11,saf_tot_11,com_tot_11,eng_tot_11,aca_tot_11) 
 
-new_survey_special_education <- survey_special_school[,c (1:11,50,83,695,751,1473,1495)]
 
 ```
+
 
 #### Combining survey data
 
-Combine `general_education` and `new_survey_special_education` data frames.
+Combine `new_general_education` and `new_special_education` data frames.
+Since bind_rows(), like other dplyr functions, is designed for manipulating dataframes, it can be used in situations where dataframes have different numbers of variable columns. Using bind_rows() here, the output dataframe will contain a column if that column appears in any of the input dataframes,I'm using bind_rows() to combine "survey_data_gen and survey_data_dis into a single dataframe.
 
 ```{r}
 Survey_Total <- new_general_education %>% 
-  bind_rows(new_survey_special_education)
+  bind_rows(new_special_education)
 ```
-The tables used in the next steps will be **Survey_Total**, **new_survey_special_education** and **new_general_education**. Survey_Total is the table that contains merged data for both types of schools, with 16 cols and 1704 rows.
+
+The tables used in the next steps will be **Survey_Total**, **new__special_education** and **new_general_education**. Survey_Total is the table that contains merged data for both types of schools, with 18 cols and 312 rows.
 
 
 ### Step 1 - Handling missing Data
@@ -206,15 +230,13 @@ for (c in colnames(Survey_Total)){
 }
 ``` 
 
-The method of handling the missing data will be complete removal
+The method of handling the missing data will be complete removal. We know by the data description that only students in grades 6-12 participated on the survey. As all missing data refers to variables related to student perception is possible that filter on variable will impact on the others. Thus in this step we will:
+        Filter all in saf_s_11 that is not NA
+        Use loop for to check if there is a NA value remaining.
 
 ```{r}
 Survey_Total = Survey_Total%>%
-  filter(!is.na(`Number of student respondents`))
-Survey_Total = Survey_Total%>%
-  filter(!is.na(`Number of teacher respondents`))
-Survey_Total = Survey_Total%>%
-  filter(!is.na(`Number of parent respondents`))
+  filter(!is.na(`saf_s_11`))
 for (c in colnames(Survey_Total)){
   for (i in 1:nrow(Survey_Total)){
     if (is.na(Survey_Total[i,c])){
@@ -227,29 +249,95 @@ for (c in colnames(Survey_Total)){
 }
 ``` 
 
-After this filter we remain with 1034 rows for analyse.We need to Checking the vars with NA
+Is not needed handle any additional NA. There is 305 rows and 18 cols at final table.
+
+```{r}
+a <- colnames(Survey_Total)
+str_replace(a,"_10","_11")
+colnames(Survey_Total) <- a
+b <- t(survey[1])
+b<- str_replace(b,"_10","_11")
+survey[[1]] <- str_replace(survey[[1]],"location" , "schoolname")
+survey[[1]] <- (b)
+```
+ There is some column code identified on Survey Data Dictionary?
+```{r}
+S_Fields <- (a) # Gets the first row and transform it on column
+Vlook_up <-  as.data.frame(S_Fields,2)
+colnames(Vlook_up) <- c("Survey_Field")
+colnames(survey) <- c("Survey_Field","Description")
+Look_up_step1 <- join(Vlook_up, survey, by = "Survey_Field")
+
+# Add description to the table
+Survey_Total_named <- rbind(Look_up_step1[[2]],Survey_Total)
+```
+
+Note that only 16 columns from dataset general_education were identified on the dictionary. 
+
+
+Other way to do the vlook_up would be by using merge:
+        **E.g.:** base1 <- (merge(survey, Vlook_up, by = 'Survey_Field'))
+
+##Step 2 - Looking for Correlations 
+
+Finding the correlation coefficient showing the parent, teacher and student perceptions of the following factors and how they affect average school SAT scores(an indicator of academic performance):
+
+1. Safety
+2. Engagement
+3. Communication
+4. Academics
+
+#### With Scatter Plots
+
+We need first create a Correlation Matrix(Correlation_Matrix) which is used to investigate the dependence between multiple variables at the same time. The result of a correlation matrix is a table containing the correlation coefficients between each variable and the others.
+
+Easy way to apply a corr. matrix is doing Correlation_Matrix <- cor(my_data). 
+
+
+```{r}
+Conv_df <- as.data.frame(Survey_Total) # convert to data frame
+i <- c(3:18)
+
+Survey_Total[,i] <- apply(Survey_Total[,i],2, function(x) as.numeric(x)) # convert to numeric
+
+
+
+
+```
+Note that some NA values were added, it happened because when we merged the 2 data sets to generate the Survey_Total we bind together the header, lets pop this value out:
 
 ```{r}
 for (c in colnames(Survey_Total)){
   for (i in 1:nrow(Survey_Total)){
     if (is.na(Survey_Total[i,c])){
-      print (c)
+      print (c(c,i))
       break
     }else{
       next
     }
   }
 }
+
+Survey_Total <- Survey_Total[-251,]
+
 ```
-I suspect that all inputs for column "Indicates parent_question 1" are NA. Thus I need to count the number of NA to be sure.
-```{r}
-conta <- 0
-for (i in 1:nrow(Survey_Total)){
-  if (is.na(Survey_Total[,`Indicates parent_question 1])){
-    conta <- conta + 1
-    next
-    }else{
-    next
-    }
-}
+
+Now lets create our Correlation matrix
+
+```{r echo=TRUE}
+Correlation_matrix <- Survey_Total %>% select(saf_p_11:aca_tot_11) %>% cor(use = "pairwise.complete.obs")
+
+# corr_mat_tib <- Correlation_matrix %>% as_tibble(rownames = "variable") / if i wanted convert in tibble
+corr_mat_tib <- round(Correlation_matrix,3) #round values
+
+#visualizing table
+
+corr_mat_tib %>% 
+  kable(bootstrap_options = c("striped", "condensed"),
+        full_width = FALSE,
+                font_size = 15,
+        )%>% row_spec(0, angle = -15, color = "blue", font_size = 13)
 ```
+
+"The closer correlation coefficient is to zero the weaker the relationship", with this I can say that there is a weak positive relationship between ...
+
